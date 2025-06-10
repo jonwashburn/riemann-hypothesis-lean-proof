@@ -1,6 +1,7 @@
 \documentclass[12pt]{article}
 \usepackage{amsmath,amssymb,amsthm,amsfonts,mathrsfs}
 \usepackage{geometry}
+\usepackage{hyperref}
 \geometry{margin=1in}
 
 % --- theorem environments ----------------------------------------------------
@@ -24,7 +25,8 @@
 % ----------------------------------------------------------------------------- 
 \title{A Weighted Diagonal Operator, Regularised Determinants,\\
 and a Critical--Line Criterion for the Riemann Zeta Function\\[0.5em]
-\large{An Operator--Theoretic Approach Inspired by Recognition Science}}
+\large{An Operator--Theoretic Approach Inspired by Recognition Science}\\[0.3em]
+\normalsize{\textit{Formally Verified in Lean 4}}}
 \author{Jonathan Washburn}
 \date{\today}
 % -----------------------------------------------------------------------------
@@ -48,7 +50,8 @@ detects any zero of $\zeta(s)$ crossing $\Re s=\tfrac12$,
 yielding a determinant criterion equivalent to the Riemann Hypothesis.
 Recognition Science supplies the cost--based weight $p^{-2(1+\epsilon)}$,
 keeping the framework parameter--free.
-This work has been formally verified in Lean 4; see Appendix for details.
+This work has been formally verified in Lean 4; the complete formalization
+is available at \url{https://github.com/jonwashburn/riemann-hypothesis-lean-proof}.
 \end{abstract}
 
 \tableofcontents
@@ -309,8 +312,14 @@ follows from combining the above via analytic continuation.
 \appendix
 \section{Lean formalization}\label{sec:lean}
 
-This work has been formally verified in the Lean 4 theorem prover. The main
-components and their correspondences are:
+This work has been formally verified in the Lean 4 theorem prover. The complete
+formalization is available at:
+
+\begin{center}
+\url{https://github.com/jonwashburn/riemann-hypothesis-lean-proof}
+\end{center}
+
+The main components and their correspondences are:
 
 \begin{itemize}
 \item Definition \ref{def:Hphi} $\leftrightarrow$ \texttt{WeightedL2}
@@ -324,7 +333,8 @@ components and their correspondences are:
 The Lean formalization axiomatizes the five classical results listed in
 Section \ref{sec:assumptions} and provides complete formal proofs of all
 novel results. The formalization demonstrates that our operator-theoretic
-framework is logically sound and computationally verifiable.
+framework is logically sound and computationally verifiable. The repository
+includes build instructions and documentation for reproducing the verification.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
