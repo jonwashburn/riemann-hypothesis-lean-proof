@@ -29,7 +29,7 @@ The proof uses Recognition Science to establish that the Riemann zeta function's
 
 ## Paper Abstract
 
-The complete mathematical development and proof can be found in `RiemannHypothesis_Paper_Final.pdf`. This paper presents a new approach to the Riemann Hypothesis using Recognition Science principles, providing both theoretical insights and a complete formal verification in Lean 4.
+The complete mathematical development and proof can be found in `Recognition_Riemann_Final.pdf`. This paper presents a new approach to the Riemann Hypothesis using Recognition Science principles, providing both theoretical insights and a complete formal verification in Lean 4.
 
 ## License
 
