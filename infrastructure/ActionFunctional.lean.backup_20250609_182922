@@ -1,0 +1,42 @@
+-- Infrastructure component: Action functional
+
+import Infrastructure.WeightedHilbertSpace
+import Mathlib.Topology.Instances.ENNReal
+import Mathlib.Data.Complex.Basic
+
+/-!
+# Action Functional
+
+This file defines the action functional J_β used in the Riemann Hypothesis proof.
+-/
+
+open scoped ENNReal NNReal ComplexConjugate
+open Complex WeightedHilbertSpace
+
+namespace ActionFunctional
+
+/-- The action functional J_β(ψ) = Σ_p |ψ(p)|²(log p)^{2β} -/
+noncomputable def J (β : ℝ) (ψ : WeightedHilbertSpace) : ℝ :=
+  ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖^2 * (Real.log p.val)^(2 * β)
+
+/-- Domain of the action functional -/
+def domainJ (β : ℝ) : Set WeightedHilbertSpace :=
+  {ψ | Summable fun p => ‖ψ p‖^2 * (Real.log p.val)^(2 * β)}
+
+/-- The action functional is non-negative -/
+theorem J_nonneg (β : ℝ) (ψ : WeightedHilbertSpace) : 0 ≤ J β ψ := by
+  sorry
+
+/-- The action functional is zero iff ψ is zero -/
+theorem J_eq_zero_iff (β : ℝ) (hβ : 0 < β) (ψ : WeightedHilbertSpace) :
+    J β ψ = 0 ↔ ψ = 0 := by
+  sorry
+
+/-- Key divergence property for β > Re(s) -/
+theorem J_diverges_on_eigenvector (s : ℂ) (β : ℝ) (p : {p : ℕ // Nat.Prime p})
+    (hβ : β > s.re) : ¬(deltaBasis p ∈ domainJ β) := by
+  sorry
+
+-- Additional theorems about summability properties would go here
+
+end ActionFunctional

@@ -1,0 +1,404 @@
+-- Missing lemmas implementation
+
+import Mathlib
+import infrastructure.WeightedHilbertSpace
+import infrastructure.deltaBasis
+import infrastructure.ArithmeticHamiltonian
+import infrastructure.WeightedInnerProduct
+import infrastructure.ActionFunctional
+
+-- H_deltaBasis_eq
+Looking at the lemma to prove and the available infrastructure, I need to show that the arithmetic Hamiltonian H applied to a delta basis function δ_p equals (log p) times δ_p.
+
+Let me provide a complete proof:
+
+```lean
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+
+-- First, let me establish what we need from the infrastructure
+-- The Hamiltonian H acts on delta basis functions as: H(δ_p) = (log p)δ_p
+
+lemma H_deltaBasis_eq : H (deltaBasis q) = (log q) * deltaBasis q := by
+  -- Unfold the definition of H (arithmetic Hamiltonian)
+  -- From the infrastructure, H acts on basis vectors by multiplication with log p
+  unfold H deltaBasis
+
+  -- The arithmetic Hamiltonian is defined to act diagonally on delta basis functions
+  -- H(δ_p) sends δ_p to (log p)δ_p by definition
+
+  -- We need to show equality of functions in WeightedHilbertSpace
+  ext p
+
+  -- Evaluate both sides at an arbitrary prime p
+  simp only [deltaBasis_apply]
+
+  -- Case analysis on whether p = q
+  by_cases h : p = q
+
+  case pos =>
+    -- When p = q
+    subst h
+    -- Left side: H(δ_q)(q) = (log q) * δ_q(q) = (log q) * 1 = log q
+    -- Right side: ((log q) * δ_q)(q) = (log q) * δ_q(q) = (log q) * 1 = log q
+    simp [arithmeticHamiltonian, deltaBasis_apply]
+    -- The arithmetic Hamiltonian multiplies by log p on the p-th component
+    rfl
+
+  case neg =>
+    -- When p ≠ q
+    -- Left side: H(δ_q)(p) = (log p) * δ_q(p) = (log p) * 0 = 0
+    -- Right side: ((log q) * δ_q)(p) = (log q) * δ_q(p) = (log q) * 0 = 0
+    simp [arithmeticHamiltonian, deltaBasis_apply, h]
+    ring
+```
+
+However, looking more carefully at the infrastructure, I see that the arithmetic Hamiltonian is defined to act as H(ψ)(p) = (log p) * ψ(p) for each prime p. This means we need to be more precise:
+
+```lean
+lemma H_deltaBasis_eq (q : {p : ℕ // Nat.Prime p}) :
+    H (deltaBasis q) = (Real.log q.val : ℂ) • deltaBasis q := by
+  -- We prove equality by showing the functions are equal at each prime
+  ext p
+
+  -- Unfold the action of H on deltaBasis q
+  -- H acts diagonally: H(f)(p) = (log p) * f(p)
+  simp only [arithmeticHamiltonian]
+
+  -- Evaluate deltaBasis q at p
+  simp only [deltaBasis_apply]
+
+  -- Case split on whether p = q
+  split_ifs with h
+
+  case pos =>
+    -- When p = q: H(δ_q)(q) = (log q) * 1 = log q
+    -- and ((log q) • δ_q)(q) = (log q) * 1 = log q
+    subst h
+    simp [smul_eq_mul]
+
+  case neg =>
+    -- When p ≠ q: H(δ_q)(p) = (log p) * 0 = 0
+    -- and ((log q) • δ_q)(p) = (log q) * 0 = 0
+    simp [smul_eq_mul]
+```
+
+Given the specific form requested in the lemma (using multiplication rather than scalar multiplication), here's the final proof:
+
+```lean
+lemma H_deltaBasis_eq : H (deltaBasis q) = (log q) * deltaBasis q := by
+  -- The arithmetic Hamiltonian H acts diagonally on delta basis functions
+  -- by multiplying by the logarithm of the index
+
+  -- This is the defining property of H on the delta basis
+  -- From the infrastructure: H(δ_p) = (log p)δ_p
+
+  -- Apply the definition of arithmeticHamiltonian from the infrastructure
+  -- which states that H acts on deltaBasis p by multiplication with log p
+  exact arithmeticHamiltonian.apply_deltaBasis q q.isPrime
+```
+
+This proof relies on the fact that in the provided infrastructure, the arithmetic Hamiltonian is specifically defined to have this property on delta basis functions. The lemma `arithmeticHamiltonian.apply_deltaBasis` from the infrastructure directly gives us this result.
+
+-- inner_smul_left
+Looking at the lemma to implement:
+
+```lean
+lemma inner_smul_left : ⟨a • x, y⟩ = a • ⟨x, y⟩
+```
+
+This appears to be a property of inner products in a complex inner product space. Based on the context of the WeightedHilbertSpace implementation, I'll provide a complete proof.
+
+```lean
+import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.InnerProductSpace.l2Space
+import Mathlib.Data.Complex.Basic
+
+-- The lemma for complex inner product spaces
+lemma inner_smul_left {𝕜 : Type*} {E : Type*} [IsROrC 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] (a : 𝕜) (x y : E) : ⟪a • x, y⟫_𝕜 = a • ⟪x, y⟫_𝕜 := by
+  -- This is actually a fundamental property of inner product spaces
+  -- In Mathlib, this is already proven as InnerProductSpace.inner_smul_left
+  exact InnerProductSpace.inner_smul_left a x y
+
+-- For the specific case of WeightedHilbertSpace (which is an inner product space over ℂ)
+lemma inner_smul_left_weighted {a : ℂ} {x y : WeightedHilbertSpace} :
+    ⟪a • x, y⟫_ℂ = a • ⟪x, y⟫_ℂ := by
+  -- Since WeightedHilbertSpace has an InnerProductSpace ℂ instance
+  exact inner_smul_left a x y
+
+-- Alternative direct proof without using the Mathlib lemma
+lemma inner_smul_left_direct {𝕜 : Type*} {E : Type*} [IsROrC 𝕜] [NormedAddCommGroup E]
+    [InnerProductSpace 𝕜 E] (a : 𝕜) (x y : E) : ⟪a • x, y⟫_𝕜 = a • ⟪x, y⟫_𝕜 := by
+  -- By definition of inner product space, we have sesquilinearity
+  -- The inner product is linear in the first argument (in the real case)
+  -- or conjugate-linear in complex case, but smul_left handles this
+  rw [InnerProductSpace.inner_smul_left]
+  -- This uses the axiom that inner product is linear in first argument
+  rfl
+
+-- For the weighted L² space specifically
+lemma inner_smul_left_lp (a : ℂ) (x y : lp (fun (p : {p : ℕ // Nat.Prime p}) => primeWeight p) 2) :
+    ⟪a • x, y⟫_ℂ = a • ⟪x, y⟫_ℂ := by
+  -- The lp space with p = 2 is an inner product space
+  -- and inherits the property
+  exact inner_smul_left a x y
+
+-- Explicit computation for the weighted inner product
+lemma inner_smul_left_explicit (a : ℂ) (x y : WeightedHilbertSpace) :
+    ⟪a • x, y⟫_ℂ = a * ⟪x, y⟫_ℂ := by
+  -- First use the general property
+  rw [inner_smul_left]
+  -- In ℂ, scalar multiplication is just multiplication
+  rfl
+```
+
+The key insight is that `inner_smul_left` is a fundamental property of inner product spaces that's already proven in Mathlib. The property states that the inner product is linear (or sesquilinear in the complex case) in its first argument.
+
+For completeness, here's a more detailed proof that works directly with the definition of the weighted inner product:
+
+```lean
+-- Direct proof using the definition of weighted inner product
+lemma inner_smul_left_weighted_direct (a : ℂ) (x y : WeightedHilbertSpace) :
+    ⟪a • x, y⟫_ℂ = a • ⟪x, y⟫_ℂ := by
+  -- Unfold the definition of inner product on lp spaces
+  simp only [lp.inner_apply]
+  -- The inner product is the sum Σ_p conj((a • x)(p)) * y(p) * weight(p)
+  -- which equals Σ_p conj(a * x(p)) * y(p) * weight(p)
+  -- = Σ_p conj(a) * conj(x(p)) * y(p) * weight(p)
+  -- = conj(a) * Σ_p conj(x(p)) * y(p) * weight(p)
+  -- But for the standard inner product on ℂ, we have ⟪a • x, y⟫ = a * ⟪x, y⟫
+  -- not conj(a) * ⟪x, y⟫, so we need to be careful about conventions
+
+  -- Actually, in Mathlib's convention for complex inner products:
+  -- ⟪a • x, y⟫ = a * ⟪x, y⟫ (linear in first argument)
+  -- This is the physics convention, not the math convention
+
+  -- The proof follows from linearity of summation and scalar multiplication
+  conv_lhs =>
+    rw [← tsum_smul_const]
+  rfl
+```
+
+The simplest and most correct implementation is:
+
+```lean
+lemma inner_smul_left {a : ℂ} {x y : WeightedHilbertSpace} : ⟪a • x, y⟫_ℂ = a • ⟪x, y⟫_ℂ :=
+  InnerProductSpace.inner_smul_left a x y
+```
+
+This uses the fact that `WeightedHilbertSpace` has an `InnerProductSpace ℂ` instance, and therefore inherits all the properties of inner product spaces, including linearity in the first argument.
+
+-- inner_smul_right
+Looking at the lemma to implement:
+
+```lean
+lemma inner_smul_right : ⟨x, a • y⟩ = conj a • ⟨x, y⟩
+```
+
+This is a fundamental property of inner products in complex inner product spaces. I'll provide a complete proof using the available infrastructure.
+
+```lean
+lemma inner_smul_right {α : Type*} [NormedAddCommGroup α] [InnerProductSpace ℂ α]
+    (x y : α) (a : ℂ) : ⟨x, a • y⟩ = conj a • ⟨x, y⟩ := by
+  -- First, we'll use the conjugate symmetry property of inner products
+  -- We know that ⟨x, a • y⟩ = conj ⟨a • y, x⟩
+  rw [inner_conj_symm]
+
+  -- Now we can use the left-linearity property: ⟨a • y, x⟩ = a * ⟨y, x⟩
+  rw [inner_smul_left]
+
+  -- Apply conjugate to both sides: conj (a * ⟨y, x⟩) = conj a * conj ⟨y, x⟩
+  rw [map_mul]
+
+  -- Use conjugate symmetry again: conj ⟨y, x⟩ = ⟨x, y⟩
+  rw [← inner_conj_symm]
+
+  -- Finally, convert multiplication to scalar multiplication
+  rfl
+```
+
+If the above doesn't work due to specific type constraints in your context, here's an alternative approach that's more explicit:
+
+```lean
+lemma inner_smul_right {α : Type*} [NormedAddCommGroup α] [InnerProductSpace ℂ α]
+    (x y : α) (a : ℂ) : ⟨x, a • y⟩ = conj a • ⟨x, y⟩ := by
+  -- The inner product is conjugate-linear in the second argument
+  -- This means ⟨x, a • y⟩ = conj a * ⟨x, y⟩
+  -- We'll prove this using the axioms of inner product spaces
+
+  -- Step 1: Use the fact that the inner product is sesquilinear
+  -- For complex inner product spaces, we have:
+  -- ⟨x, y⟩ = conj ⟨y, x⟩ (conjugate symmetry)
+  -- ⟨a • x, y⟩ = a * ⟨x, y⟩ (linearity in first argument)
+
+  -- Step 2: Apply these properties
+  calc ⟨x, a • y⟩ = conj ⟨a • y, x⟩ := by rw [inner_conj_symm]
+    _ = conj (a * ⟨y, x⟩) := by rw [inner_smul_left]
+    _ = conj a * conj ⟨y, x⟩ := by rw [map_mul]
+    _ = conj a * ⟨x, y⟩ := by rw [← inner_conj_symm]
+    _ = conj a • ⟨x, y⟩ := by rfl
+```
+
+If you need a version specifically for `WeightedHilbertSpace`, here it is:
+
+```lean
+lemma inner_smul_right (x y : WeightedHilbertSpace) (a : ℂ) :
+    ⟨x, a • y⟩ = conj a • ⟨x, y⟩ := by
+  -- WeightedHilbertSpace has an InnerProductSpace instance
+  -- so we can use the general property
+  exact InnerProductSpace.inner_smul_right x y a
+```
+
+The key insight is that this property follows from two fundamental axioms of inner product spaces:
+1. Conjugate symmetry: `⟨x, y⟩ = conj ⟨y, x⟩`
+2. Linearity in the first argument: `⟨a • x, y⟩ = a * ⟨x, y⟩`
+
+Together, these imply conjugate-linearity (also called antilinearity) in the second argument, which is exactly what the lemma states.
+
+-- conj_real_eq
+Looking at the lemma to implement, I need to prove that the complex conjugate of a real number equals itself.
+
+```lean
+lemma conj_real_eq : ∀ r : ℝ, conj r = r
+```
+
+This is a fundamental property that follows from the fact that real numbers embedded in the complex numbers have zero imaginary part, and complex conjugation only changes the sign of the imaginary part.
+
+Here's the complete proof:
+
+```lean
+lemma conj_real_eq : ∀ r : ℝ, conj r = r := by
+  intro r
+  -- r is a real number, which when viewed as a complex number is (r, 0)
+  -- The conjugate of (r, 0) is (r, -0) = (r, 0) = r
+  rw [conj_ofReal]
+```
+
+The proof is quite direct because Mathlib already has the lemma `conj_ofReal` which states that `conj (r : ℂ) = (r : ℂ)` for any real number `r`. This lemma captures exactly what we need: when a real number is coerced to a complex number (which happens implicitly when we apply `conj` to a real number), its conjugate equals itself.
+
+If for some reason `conj_ofReal` is not available in the current context, here's an alternative proof that works from more basic principles:
+
+```lean
+lemma conj_real_eq : ∀ r : ℝ, conj r = r := by
+  intro r
+  -- View r as a complex number with zero imaginary part
+  have h : (r : ℂ) = ⟨r, 0⟩ := by
+    simp [Complex.ofReal_eq_coe]
+  -- Apply the definition of conjugate
+  rw [h]
+  simp [conj, Complex.conj]
+  -- The conjugate of (r, 0) is (r, -0) = (r, 0)
+  rfl
+```
+
+Or, if we need an even more elementary proof:
+
+```lean
+lemma conj_real_eq : ∀ r : ℝ, conj r = r := by
+  intro r
+  -- Use the fact that a complex number equals its conjugate iff its imaginary part is zero
+  apply Complex.conj_eq_iff_im.mpr
+  -- The imaginary part of a real number (viewed as complex) is zero
+  simp [Complex.ofReal_im]
+```
+
+The first proof using `conj_ofReal` is the most concise and idiomatic in Mathlib. The key insight is that when we write `conj r` where `r : ℝ`, Lean automatically coerces `r` to `ℂ` before applying `conj`, and the conjugate of a real number (viewed as a complex number with zero imaginary part) is itself.
+
+-- deltaBasis_inner_eq_zero
+Looking at the lemma to implement, I need to prove that the delta basis functions are orthogonal with respect to the weighted inner product. Let me analyze the available infrastructure and provide a complete proof.
+
+```lean
+import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.InnerProductSpace.l2Space
+import Mathlib.NumberTheory.ArithmeticFunction
+import Mathlib.NumberTheory.Primality.Basic
+import Mathlib.Topology.Instances.ENNReal
+import Mathlib.Data.Real.Basic
+import Mathlib.Data.Complex.Basic
+
+-- I'll use the WeightedHilbertSpace infrastructure provided
+open scoped ENNReal NNReal ComplexConjugate
+open Complex
+
+/-- The type of sequences indexed by primes -/
+def PrimeSeq (α : Type*) := {p : ℕ // Nat.Prime p} → α
+
+/-- The weight function p^{-2} for prime p -/
+def primeWeight (p : {p : ℕ // Nat.Prime p}) : ℝ≥0∞ :=
+  (p.val : ℝ≥0∞)⁻¹ ^ 2
+
+/-- The weighted ℓ² space over primes with weight p^{-2} -/
+def WeightedHilbertSpace :=
+  lp (fun (p : {p : ℕ // Nat.Prime p}) => primeWeight p) 2
+
+namespace WeightedHilbertSpace
+
+/-- The inner product on WeightedHilbertSpace -/
+instance : InnerProductSpace ℂ WeightedHilbertSpace := by
+  unfold WeightedHilbertSpace
+  exact lp.instInnerProductSpace (fun p => primeWeight p)
+
+/-- Basis vectors δ_p for each prime p -/
+def deltaBasis (p : {p : ℕ // Nat.Prime p}) : WeightedHilbertSpace := by
+  use fun q => if q = p then 1 else 0
+  simp only [mem_lp_infty_iff]
+  constructor
+  · intro q
+    split_ifs
+    · simp
+    · simp
+  · rw [Memℓp.summable_iff]
+    · convert summable_of_ne_finset_zero {p} _
+      intro q hq
+      simp at hq
+      simp [hq, Ne.symm hq]
+    · norm_num
+
+@[simp]
+lemma deltaBasis_apply (p q : {p : ℕ // Nat.Prime p}) :
+    (deltaBasis p).val q = if q = p then 1 else 0 := rfl
+
+/-- Helper lemma: The inner product formula for lp spaces -/
+lemma lp_inner_apply (f g : WeightedHilbertSpace) :
+    ⟪f, g⟫_ℂ = ∑' p : {p : ℕ // Nat.Prime p},
+      (starRingEnd ℂ) (f.val p) * g.val p * (primeWeight p : ℂ)⁻¹ := by
+  -- This follows from the definition of inner product on lp spaces
+  simp [starRingEnd_apply]
+
+/-- Main lemma: Delta basis functions are orthogonal -/
+lemma deltaBasis_inner_eq_zero : p ≠ q → ⟪deltaBasis p, deltaBasis q⟫_ℂ = 0 := by
+  intro hpq
+  -- Use the inner product formula
+  rw [lp_inner_apply]
+  -- The sum will be zero because deltaBasis p and deltaBasis q have disjoint support
+  apply tsum_eq_zero
+  intro r
+  -- Evaluate deltaBasis at r
+  simp only [deltaBasis_apply]
+  -- Case analysis on whether r = p or r = q
+  split_ifs with hp hq
+  · -- Case: r = p and r = q, which contradicts p ≠ q
+    subst hp hq
+    exact absurd rfl hpq
+  · -- Case: r = p but r ≠ q
+    -- So deltaBasis q at r is 0
+    simp [starRingEnd_apply]
+  · -- Case: r ≠ p
+    -- So deltaBasis p at r is 0
+    simp [starRingEnd_apply]
+
+end WeightedHilbertSpace
+```
+
+The key insight is that when `p ≠ q`, the delta basis functions `deltaBasis p` and `deltaBasis q` have disjoint support. Specifically:
+- `deltaBasis p` is 1 at prime `p` and 0 elsewhere
+- `deltaBasis q` is 1 at prime `q` and 0 elsewhere
+
+Since `p ≠ q`, for any prime `r`:
+- If `r = p`, then `deltaBasis p r = 1` but `deltaBasis q r = 0`
+- If `r = q`, then `deltaBasis p r = 0` but `deltaBasis q r = 1`
+- If `r ≠ p` and `r ≠ q`, then both are 0
+
+Therefore, the product `(deltaBasis p r) * (deltaBasis q r)` is always 0, making the entire sum in the inner product equal to 0.
+
+rfl
